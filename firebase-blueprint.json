@@ -1,0 +1,88 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Community Report",
+      "description": "Live road update submitted by a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["Accident", "Traffic jam", "Police checking", "Road block", "Flooding", "Construction", "Signal malfunction", "Event crowd", "Road cleared"] },
+        "description": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" },
+            "address": { "type": "string" }
+          },
+          "required": ["lat", "lng"]
+        },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "confirmations": { "type": "number" },
+        "notPresent": { "type": "number" },
+        "cleared": { "type": "number" },
+        "isVerified": { "type": "boolean" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["userId", "type", "location", "timestamp"]
+    },
+    "Parking": {
+      "title": "Parking Location",
+      "description": "Smart parking spot information.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          },
+          "required": ["lat", "lng"]
+        },
+        "totalSlots": { "type": "number" },
+        "availableSlots": { "type": "number" },
+        "pricePerHour": { "type": "number" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "location", "totalSlots", "availableSlots"]
+    },
+    "Alert": {
+      "title": "Real-time Alert",
+      "description": "Critical alerts for users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] }
+      },
+      "required": ["title", "type", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Collection of community reports."
+    },
+    "/parking/{parkingId}": {
+      "schema": "Parking",
+      "description": "Collection of parking locations."
+    },
+    "/alerts/{alertId}": {
+      "schema": "Alert",
+      "description": "Collection of real-time alerts."
+    }
+  }
+}

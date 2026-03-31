@@ -1,0 +1,5 @@
+{
+  "name": "VazhiGo",
+  "description": "AI-powered smart mobility platform for Kerala. Live traffic, community reports, parking, and intelligent route planning.",
+  "requestFramePermissions": ["geolocation"]
+}

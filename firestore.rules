@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: reports
+    // Fields: userId, type, description, location (lat, lng, address), timestamp, confirmations, notPresent, cleared, isVerified, imageUrl
+    //
+    // Collection: parking
+    // Fields: name, location (lat, lng), totalSlots, availableSlots, pricePerHour, lastUpdated
+    //
+    // Collection: alerts
+    // Fields: title, type, description, location (lat, lng), timestamp, severity
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "anaghasunilkumar65@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['userId', 'type', 'location', 'timestamp']) &&
+             data.userId is string &&
+             data.type in ["Accident", "Traffic jam", "Police checking", "Road block", "Flooding", "Construction", "Signal malfunction", "Event crowd", "Road cleared"] &&
+             data.location.lat is number &&
+             data.location.lng is number;
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow read: if true; // Publicly readable for map visualization
+      allow create: if isAuthenticated() && isValidReport(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmations', 'notPresent', 'cleared', 'isVerified']) ||
+         isOwner(resource.data.userId) ||
+         isAdmin());
+      allow delete: if isAdmin() || isOwner(resource.data.userId);
+    }
+
+    // Parking
+    match /parking/{parkingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableSlots', 'lastUpdated']);
+    }
+
+    // Alerts
+    match /alerts/{alertId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
+    }
+  }
+}
